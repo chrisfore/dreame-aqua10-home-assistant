@@ -133,6 +133,10 @@ can't ship with hard-coded entity IDs. [`generate_dashboard.py`](generate_dashbo
 robot — nothing to hand-edit. It auto-discovers the vacuum, its map camera, battery, cleaning
 history, and rooms, and only includes the cards your device actually supports.
 
+> **Want to preview it first?** [`examples/vacuum.yaml`](examples/vacuum.yaml) is a ready-made
+> sample built from example data — paste it to see the layout, then run the generator to build
+> one bound to your own entities.
+
 ### Requirements
 
 - HACS cards: [Mushroom](https://github.com/piitaya/lovelace-mushroom) and

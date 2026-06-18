@@ -1,0 +1,379 @@
+# ============================================================================
+# SAMPLE dashboard — built from EXAMPLE data so you can preview the layout.
+# This is NOT tied to a real home. To get one for YOUR vacuum and rooms, run:
+#   HA_URL=http://homeassistant.local:8123 HA_TOKEN=xxxx python3 generate_dashboard.py
+# which writes vacuum.yaml with your own entities auto-discovered.
+# Requires the HACS cards: Mushroom and card-mod.
+# ============================================================================
+title: Vacuum
+views:
+- title: Vacuum
+  path: vacuum
+  icon: mdi:robot-vacuum
+  cards:
+  - type: vertical-stack
+    cards:
+    - type: custom:mushroom-title-card
+      title: Vacuum
+      subtitle: At a glance
+    - type: vertical-stack
+      cards:
+      - type: custom:mushroom-chips-card
+        alignment: center
+        chips:
+        - type: template
+          entity: vacuum.aqua10
+          icon: mdi:robot-vacuum
+          icon_color: '{{ {''docked'':''green'',''charging'':''green'',''cleaning'':''blue'',''returning'':''blue'',''paused'':''orange'',''error'':''red''}.get(states(''vacuum.aqua10''),''grey'')
+            }}'
+          content: '{{ state_attr(''vacuum.aqua10'',''status'') or states(''vacuum.aqua10'')|title }}'
+          tap_action:
+            action: more-info
+        - type: template
+          entity: sensor.aqua10_battery_level
+          icon: mdi:battery
+          icon_color: '{% set b=states(''sensor.aqua10_battery_level'')|int(0) %}{{ ''green'' if b>50
+            else ''orange'' if b>20 else ''red'' }}'
+          content: '{{ states(''sensor.aqua10_battery_level'') }}%'
+          tap_action:
+            action: more-info
+        - type: template
+          icon: mdi:refresh
+          content: Refresh
+          tap_action:
+            action: call-service
+            service: homeassistant.update_entity
+            target:
+              entity_id:
+              - vacuum.aqua10
+              - camera.aqua10_map
+              - sensor.aqua10_cleaning_history
+        card_mod: &id001
+          style: 'ha-card { background: none !important; box-shadow: none !important; border: none !important;
+            }
+
+            '
+      - type: custom:mushroom-chips-card
+        alignment: center
+        chips:
+        - type: template
+          icon: mdi:pause
+          content: Pause
+          tap_action:
+            action: call-service
+            service: vacuum.pause
+            target:
+              entity_id: vacuum.aqua10
+        - type: template
+          icon: mdi:home-import-outline
+          content: Send home
+          tap_action:
+            action: call-service
+            service: vacuum.return_to_base
+            target:
+              entity_id: vacuum.aqua10
+        - type: template
+          icon: mdi:map-marker
+          content: Find it
+          tap_action:
+            action: call-service
+            service: vacuum.locate
+            target:
+              entity_id: vacuum.aqua10
+        card_mod: *id001
+      card_mod:
+        style: "#root {\n  background: var(--card-background-color);\n  border: 1px solid var(--divider-color);\n\
+          \  border-radius: 16px;\n  padding: 8px 4px;\n}\n"
+    - type: grid
+      columns: 2
+      square: false
+      cards:
+      - type: custom:mushroom-template-card
+        icon: mdi:history
+        icon_color: blue
+        primary: Last cleaned
+        secondary: '{% set t=states(''sensor.aqua10_cleaning_history'') %}{% if t not in [''unknown'',''unavailable'',''none'','''']
+          %}{{ relative_time(as_datetime(t)) }} ago{% else %}—{% endif %}'
+        multiline_secondary: false
+        entity: sensor.aqua10_cleaning_history
+        tap_action:
+          action: more-info
+      - type: custom:mushroom-template-card
+        icon: mdi:calendar-clock
+        icon_color: indigo
+        primary: Next cleaning
+        secondary: '{% set sched=state_attr(''vacuum.aqua10'',''schedule'') %}{% set ns=namespace(best=none)
+          %}{% if sched %}{% for s in sched %}{% if s.enabled and not s.invalid %}{% set h=s.time.split('':'')[0]|int
+          %}{% set m=s.time.split('':'')[1]|int %}{% for d in range(0,8) %}{% set cand=(now()+timedelta(days=d)).replace(hour=h,minute=m,second=0,microsecond=0)
+          %}{% set sidx=(cand.weekday()+1)%7 %}{% if s.repeats[sidx]==''1'' and cand>now() and (ns.best
+          is none or cand<ns.best) %}{% set ns.best=cand %}{% endif %}{% endfor %}{% endif %}{% endfor
+          %}{% endif %}{% if ns.best %}{% set dd=(ns.best.date()-now().date()).days %}{% if dd==0 %}Today{%
+          elif dd==1 %}Tomorrow{% else %}{{ ns.best.strftime(''%A'') }}{% endif %} at {{ ns.best.strftime(''%-I:%M
+          %p'') }}{% else %}Not scheduled{% endif %}'
+        multiline_secondary: false
+        entity: vacuum.aqua10
+        tap_action:
+          action: more-info
+    - type: custom:mushroom-template-card
+      primary: Start cleaning
+      secondary: Clean the whole house
+      icon: mdi:play-circle
+      icon_color: white
+      layout: horizontal
+      multiline_secondary: false
+      tap_action:
+        action: call-service
+        service: vacuum.start
+        target:
+          entity_id: vacuum.aqua10
+      card_mod:
+        style: "ha-card {\n  background:#2e7d32; border:none; border-radius:16px;\n  --primary-text-color:#fff;\
+          \ --secondary-text-color:rgba(255,255,255,.9); --card-primary-color:#fff; font-weight:700;\n\
+          }\n"
+    - type: custom:mushroom-template-card
+      primary: Stop and return to dock
+      icon: mdi:stop-circle
+      icon_color: white
+      layout: horizontal
+      multiline_secondary: false
+      tap_action:
+        action: call-service
+        service: vacuum.return_to_base
+        target:
+          entity_id: vacuum.aqua10
+        confirmation:
+          text: Stop cleaning and send the vacuum back to its dock?
+      card_mod:
+        style: ":host { {% if states('vacuum.aqua10') not in ['cleaning','returning','paused'] %}display:none\
+          \ !important;{% endif %} }\nha-card {\n  background:#e53935; border:none; border-radius:16px;\n\
+          \  --primary-text-color:#fff; --card-primary-color:#fff; --icon-primary-color:#fff; font-weight:700;\n\
+          }\n"
+  - type: vertical-stack
+    cards:
+    - type: custom:mushroom-title-card
+      subtitle: Map
+    - type: picture-entity
+      entity: camera.aqua10_map
+      camera_view: auto
+      show_name: false
+      show_state: false
+      tap_action:
+        action: more-info
+  - type: vertical-stack
+    cards:
+    - type: custom:mushroom-title-card
+      subtitle: Clean a room
+    - type: grid
+      columns: 2
+      square: false
+      cards:
+      - type: custom:mushroom-template-card
+        primary: '{% set rs=state_attr(''vacuum.aqua10'',''rooms'') %}{% set ns=namespace(n=''Bathroom'')
+          %}{% if rs %}{% for m in rs.values() %}{% for r in m %}{% if r.id==7 %}{% set ns.n=r.name %}{%
+          endif %}{% endfor %}{% endfor %}{% endif %}{{ ns.n }}'
+        secondary: Tap to clean
+        icon: mdi:shower
+        icon_color: blue
+        tap_action:
+          action: call-service
+          service: dreame_vacuum.vacuum_clean_segment
+          target:
+            entity_id: vacuum.aqua10
+          data:
+            segments:
+            - 7
+          confirmation:
+            text: Start cleaning Bathroom?
+        card_mod:
+          style: 'ha-card { border:1px solid var(--divider-color); border-radius:16px; }
+
+            '
+      - type: custom:mushroom-template-card
+        primary: '{% set rs=state_attr(''vacuum.aqua10'',''rooms'') %}{% set ns=namespace(n=''Bedroom
+          2'') %}{% if rs %}{% for m in rs.values() %}{% for r in m %}{% if r.id==5 %}{% set ns.n=r.name
+          %}{% endif %}{% endfor %}{% endfor %}{% endif %}{{ ns.n }}'
+        secondary: Tap to clean
+        icon: mdi:bed
+        icon_color: blue
+        tap_action:
+          action: call-service
+          service: dreame_vacuum.vacuum_clean_segment
+          target:
+            entity_id: vacuum.aqua10
+          data:
+            segments:
+            - 5
+          confirmation:
+            text: Start cleaning Bedroom 2?
+        card_mod:
+          style: 'ha-card { border:1px solid var(--divider-color); border-radius:16px; }
+
+            '
+      - type: custom:mushroom-template-card
+        primary: '{% set rs=state_attr(''vacuum.aqua10'',''rooms'') %}{% set ns=namespace(n=''Dining Room'')
+          %}{% if rs %}{% for m in rs.values() %}{% for r in m %}{% if r.id==3 %}{% set ns.n=r.name %}{%
+          endif %}{% endfor %}{% endfor %}{% endif %}{{ ns.n }}'
+        secondary: Tap to clean
+        icon: mdi:silverware-fork-knife
+        icon_color: blue
+        tap_action:
+          action: call-service
+          service: dreame_vacuum.vacuum_clean_segment
+          target:
+            entity_id: vacuum.aqua10
+          data:
+            segments:
+            - 3
+          confirmation:
+            text: Start cleaning Dining Room?
+        card_mod:
+          style: 'ha-card { border:1px solid var(--divider-color); border-radius:16px; }
+
+            '
+      - type: custom:mushroom-template-card
+        primary: '{% set rs=state_attr(''vacuum.aqua10'',''rooms'') %}{% set ns=namespace(n=''Guest Bedroom'')
+          %}{% if rs %}{% for m in rs.values() %}{% for r in m %}{% if r.id==10 %}{% set ns.n=r.name %}{%
+          endif %}{% endfor %}{% endfor %}{% endif %}{{ ns.n }}'
+        secondary: Tap to clean
+        icon: mdi:bed
+        icon_color: blue
+        tap_action:
+          action: call-service
+          service: dreame_vacuum.vacuum_clean_segment
+          target:
+            entity_id: vacuum.aqua10
+          data:
+            segments:
+            - 10
+          confirmation:
+            text: Start cleaning Guest Bedroom?
+        card_mod:
+          style: 'ha-card { border:1px solid var(--divider-color); border-radius:16px; }
+
+            '
+      - type: custom:mushroom-template-card
+        primary: '{% set rs=state_attr(''vacuum.aqua10'',''rooms'') %}{% set ns=namespace(n=''Hallway'')
+          %}{% if rs %}{% for m in rs.values() %}{% for r in m %}{% if r.id==8 %}{% set ns.n=r.name %}{%
+          endif %}{% endfor %}{% endfor %}{% endif %}{{ ns.n }}'
+        secondary: Tap to clean
+        icon: mdi:floor-plan
+        icon_color: blue
+        tap_action:
+          action: call-service
+          service: dreame_vacuum.vacuum_clean_segment
+          target:
+            entity_id: vacuum.aqua10
+          data:
+            segments:
+            - 8
+          confirmation:
+            text: Start cleaning Hallway?
+        card_mod:
+          style: 'ha-card { border:1px solid var(--divider-color); border-radius:16px; }
+
+            '
+      - type: custom:mushroom-template-card
+        primary: '{% set rs=state_attr(''vacuum.aqua10'',''rooms'') %}{% set ns=namespace(n=''Kitchen'')
+          %}{% if rs %}{% for m in rs.values() %}{% for r in m %}{% if r.id==2 %}{% set ns.n=r.name %}{%
+          endif %}{% endfor %}{% endfor %}{% endif %}{{ ns.n }}'
+        secondary: Tap to clean
+        icon: mdi:countertop
+        icon_color: blue
+        tap_action:
+          action: call-service
+          service: dreame_vacuum.vacuum_clean_segment
+          target:
+            entity_id: vacuum.aqua10
+          data:
+            segments:
+            - 2
+          confirmation:
+            text: Start cleaning Kitchen?
+        card_mod:
+          style: 'ha-card { border:1px solid var(--divider-color); border-radius:16px; }
+
+            '
+      - type: custom:mushroom-template-card
+        primary: '{% set rs=state_attr(''vacuum.aqua10'',''rooms'') %}{% set ns=namespace(n=''Laundry
+          Room'') %}{% if rs %}{% for m in rs.values() %}{% for r in m %}{% if r.id==9 %}{% set ns.n=r.name
+          %}{% endif %}{% endfor %}{% endfor %}{% endif %}{{ ns.n }}'
+        secondary: Tap to clean
+        icon: mdi:washing-machine
+        icon_color: blue
+        tap_action:
+          action: call-service
+          service: dreame_vacuum.vacuum_clean_segment
+          target:
+            entity_id: vacuum.aqua10
+          data:
+            segments:
+            - 9
+          confirmation:
+            text: Start cleaning Laundry Room?
+        card_mod:
+          style: 'ha-card { border:1px solid var(--divider-color); border-radius:16px; }
+
+            '
+      - type: custom:mushroom-template-card
+        primary: '{% set rs=state_attr(''vacuum.aqua10'',''rooms'') %}{% set ns=namespace(n=''Living Room'')
+          %}{% if rs %}{% for m in rs.values() %}{% for r in m %}{% if r.id==1 %}{% set ns.n=r.name %}{%
+          endif %}{% endfor %}{% endfor %}{% endif %}{{ ns.n }}'
+        secondary: Tap to clean
+        icon: mdi:sofa
+        icon_color: blue
+        tap_action:
+          action: call-service
+          service: dreame_vacuum.vacuum_clean_segment
+          target:
+            entity_id: vacuum.aqua10
+          data:
+            segments:
+            - 1
+          confirmation:
+            text: Start cleaning Living Room?
+        card_mod:
+          style: 'ha-card { border:1px solid var(--divider-color); border-radius:16px; }
+
+            '
+      - type: custom:mushroom-template-card
+        primary: '{% set rs=state_attr(''vacuum.aqua10'',''rooms'') %}{% set ns=namespace(n=''Office'')
+          %}{% if rs %}{% for m in rs.values() %}{% for r in m %}{% if r.id==6 %}{% set ns.n=r.name %}{%
+          endif %}{% endfor %}{% endfor %}{% endif %}{{ ns.n }}'
+        secondary: Tap to clean
+        icon: mdi:desk
+        icon_color: blue
+        tap_action:
+          action: call-service
+          service: dreame_vacuum.vacuum_clean_segment
+          target:
+            entity_id: vacuum.aqua10
+          data:
+            segments:
+            - 6
+          confirmation:
+            text: Start cleaning Office?
+        card_mod:
+          style: 'ha-card { border:1px solid var(--divider-color); border-radius:16px; }
+
+            '
+      - type: custom:mushroom-template-card
+        primary: '{% set rs=state_attr(''vacuum.aqua10'',''rooms'') %}{% set ns=namespace(n=''Primary
+          Bedroom'') %}{% if rs %}{% for m in rs.values() %}{% for r in m %}{% if r.id==4 %}{% set ns.n=r.name
+          %}{% endif %}{% endfor %}{% endfor %}{% endif %}{{ ns.n }}'
+        secondary: Tap to clean
+        icon: mdi:bed
+        icon_color: blue
+        tap_action:
+          action: call-service
+          service: dreame_vacuum.vacuum_clean_segment
+          target:
+            entity_id: vacuum.aqua10
+          data:
+            segments:
+            - 4
+          confirmation:
+            text: Start cleaning Primary Bedroom?
+        card_mod:
+          style: 'ha-card { border:1px solid var(--divider-color); border-radius:16px; }
+
+            '
