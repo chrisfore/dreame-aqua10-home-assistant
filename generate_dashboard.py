@@ -126,10 +126,16 @@ def build_config(states):
                 "tap_action": {"action": "call-service", "service": "homeassistant.update_entity",
                                "target": {"entity_id": refresh_targets}}})
     status_chips = {"type": "custom:mushroom-chips-card", "alignment": "center", "chips": sci, "card_mod": NOBG}
-    action_chips = {"type": "custom:mushroom-chips-card", "alignment": "center", "chips": [
-        svc_chip("mdi:pause", "Pause", "vacuum.pause"),
-        svc_chip("mdi:home-import-outline", "Send home", "vacuum.return_to_base"),
-        svc_chip("mdi:map-marker", "Find it", "vacuum.locate")], "card_mod": NOBG}
+    acts = [svc_chip("mdi:pause", "Pause", "vacuum.pause"),
+            svc_chip("mdi:home-import-outline", "Send home", "vacuum.return_to_base"),
+            svc_chip("mdi:map-marker", "Find it", "vacuum.locate")]
+    # "Max suction" — only if the vacuum exposes fan/suction levels; uses the highest one.
+    fans = vac["attributes"].get("fan_speed_list") or vac["attributes"].get("suction_level_list") or []
+    if fans:
+        acts.append({"type": "template", "icon": "mdi:fan-speed-3", "content": "Max suction",
+                     "tap_action": {"action": "call-service", "service": "vacuum.set_fan_speed",
+                                    "target": {"entity_id": V}, "data": {"fan_speed": fans[-1]}}})
+    action_chips = {"type": "custom:mushroom-chips-card", "alignment": "center", "chips": acts, "card_mod": NOBG}
     status_container = {"type": "vertical-stack", "cards": [status_chips, action_chips], "card_mod": CONTAINER}
 
     # info tiles (Last cleaned only if a history sensor exists)

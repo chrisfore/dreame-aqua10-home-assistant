@@ -80,6 +80,16 @@ views:
             service: vacuum.locate
             target:
               entity_id: vacuum.aqua10
+        - type: template
+          icon: mdi:fan-speed-3
+          content: Max suction
+          tap_action:
+            action: call-service
+            service: vacuum.set_fan_speed
+            target:
+              entity_id: vacuum.aqua10
+            data:
+              fan_speed: Turbo
         card_mod: *id001
       card_mod:
         style: "#root {\n  background: var(--card-background-color);\n  border: 1px solid var(--divider-color);\n\
