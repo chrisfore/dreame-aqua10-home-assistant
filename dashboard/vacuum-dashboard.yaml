@@ -1,8 +1,8 @@
 # Dreame Aqua10 — Home Assistant dashboard
 # Paste into a dashboard's raw configuration editor (Edit dashboard -> Edit in YAML).
 # Requires the Mushroom and card-mod custom cards (install via HACS).
-# Adjust entity IDs (vacuum.aqua10, camera.aqua10_map, sensor.aqua10_*) and the room
-# segment IDs to match your own setup.
+# The room names and segment IDs below are EXAMPLES — replace them with your own.
+# Your room IDs are in the 'rooms' attribute of your vacuum.* entity.
 
 views:
 - title: Vacuum
@@ -189,7 +189,7 @@ views:
 
             '
       - type: custom:mushroom-template-card
-        primary: Dining Hall
+        primary: Dining Room
         secondary: Tap to clean
         icon: mdi:silverware-fork-knife
         icon_color: blue
@@ -202,7 +202,7 @@ views:
             segments:
             - 3
           confirmation:
-            text: Start cleaning Dining Hall?
+            text: Start cleaning Dining Room?
         card_mod:
           style: 'ha-card { border:1px solid var(--divider-color); border-radius:16px; }
 
@@ -303,7 +303,7 @@ views:
 
             '
       - type: custom:mushroom-template-card
-        primary: Madison Room
+        primary: Bedroom 2
         secondary: Tap to clean
         icon: mdi:bed-king-outline
         icon_color: blue
@@ -316,13 +316,13 @@ views:
             segments:
             - 13
           confirmation:
-            text: Start cleaning Madison Room?
+            text: Start cleaning Bedroom 2?
         card_mod:
           style: 'ha-card { border:1px solid var(--divider-color); border-radius:16px; }
 
             '
       - type: custom:mushroom-template-card
-        primary: Front Bedroom
+        primary: Guest Bedroom
         secondary: Tap to clean
         icon: mdi:bed-outline
         icon_color: blue
@@ -335,13 +335,13 @@ views:
             segments:
             - 10
           confirmation:
-            text: Start cleaning Front Bedroom?
+            text: Start cleaning Guest Bedroom?
         card_mod:
           style: 'ha-card { border:1px solid var(--divider-color); border-radius:16px; }
 
             '
       - type: custom:mushroom-template-card
-        primary: Gina Office
+        primary: Study
         secondary: Tap to clean
         icon: mdi:laptop
         icon_color: blue
@@ -354,7 +354,7 @@ views:
             segments:
             - 11
           confirmation:
-            text: Start cleaning Gina Office?
+            text: Start cleaning Study?
         card_mod:
           style: 'ha-card { border:1px solid var(--divider-color); border-radius:16px; }
 
