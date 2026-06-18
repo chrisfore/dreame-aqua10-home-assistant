@@ -1,0 +1,14 @@
+# Secrets — never commit
+.ha_token
+*.token
+secrets.yaml
+.env
+
+# Python
+__pycache__/
+*.pyc
+
+# Editor / OS
+.DS_Store
+.vscode/
+.idea/
