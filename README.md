@@ -1,7 +1,8 @@
 # Dreame Aqua10 → Home Assistant
 
 A practical guide to integrating the **Dreame Aqua10 Roller** (`dreame.vacuum.r9533a`)
-into Home Assistant, plus a ready-to-use dashboard with a live map and per-room cleaning.
+into Home Assistant, plus a dashboard generator that builds a live-map, per-room-cleaning
+dashboard tailored to **your own** entities — no hardcoded entity IDs.
 
 <p align="center">
   <img src="docs/dashboard-example.png" alt="Example dashboard" width="380">
@@ -121,34 +122,48 @@ Valetudo / rooting path for the Aqua10.
 
 ## 3. Dashboard
 
-[`dashboard/vacuum-dashboard.yaml`](dashboard/vacuum-dashboard.yaml) is a clean dashboard with:
+A clean, mobile-friendly dashboard with a live map, per-room cleaning buttons, status,
+last-cleaned / next-scheduled, and start/stop controls.
 
-- A status block: current status, battery, and quick **Pause / Send home / Find it** actions.
-- **Last cleaned** and **Next scheduled cleaning** (the next run is computed from the robot's
-  own schedule).
-- A big **Start cleaning** button and a context-aware **Stop and return to dock** button.
-- The **live map** image.
-- A grid of **per-room cleaning** buttons.
+### Why a generator?
 
-### Requirements (install via HACS)
+Every vacuum has a different entity name and a different set of rooms, so the dashboard
+can't ship with hard-coded entity IDs. [`generate_dashboard.py`](generate_dashboard.py) reads
+**your** entities from the Home Assistant API and writes a `vacuum.yaml` tailored to your
+robot — nothing to hand-edit. It auto-discovers the vacuum, its map camera, battery, cleaning
+history, and rooms, and only includes the cards your device actually supports.
 
-- [Mushroom](https://github.com/piitaya/lovelace-mushroom)
-- [card-mod](https://github.com/thomasloven/lovelace-card-mod)
+### Requirements
 
-### Use it
+- HACS cards: [Mushroom](https://github.com/piitaya/lovelace-mushroom) and
+  [card-mod](https://github.com/thomasloven/lovelace-card-mod).
+- Python 3 to run the generator (PyYAML optional — used for prettier output if present).
 
-Open a dashboard in edit mode → `⋮` → **Edit in YAML** (raw configuration editor) → paste the
-contents of `dashboard/vacuum-dashboard.yaml`.
+### Quick start
+
+1. Install the HACS cards above and hard-refresh your browser.
+2. Create a Home Assistant **long-lived access token** (profile → Security → Long-lived access tokens).
+3. Generate your dashboard:
+   ```bash
+   HA_URL=http://homeassistant.local:8123 HA_TOKEN=xxxxxxxx python3 generate_dashboard.py
+   ```
+   This writes `vacuum.yaml`, tailored to your entities.
+4. Add a new dashboard → top-right ⋮ → **Edit Dashboard** → ⋮ → **Raw configuration editor** →
+   paste the contents of `vacuum.yaml`.
+
+### What you get
+
+- **Status block** — status, battery, and quick **Pause / Send home / Find it**.
+- **Last cleaned** and **Next cleaning** (the next run is computed from the vacuum's own schedule).
+- A big **Start cleaning** button and a context-aware **Stop and return to dock**.
+- The **live map**.
+- A **per-room cleaning** button for each room — labels are read live, so rooms you rename in
+  the app update on the dashboard without regenerating.
 
 ### Customize
 
-The dashboard uses the entity prefix `aqua10` and a set of example room IDs. Adjust to match
-your setup:
-
-- Replace `vacuum.aqua10`, `camera.aqua10_map`, `sensor.aqua10_battery_level`, and
-  `sensor.aqua10_cleaning_history` with your own entity IDs.
-- Update the room buttons — each calls `dreame_vacuum.vacuum_clean_segment` with the room's
-  `segments` ID. Your room IDs are listed in the `rooms` attribute of your `vacuum.*` entity.
+Open `generate_dashboard.py` — adjust the room icons in `room_icon()` or the card colors in
+the styles. Re-run it any time your rooms change to refresh the per-room buttons.
 
 ---
 
