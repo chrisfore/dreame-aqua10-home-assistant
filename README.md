@@ -3,6 +3,13 @@
 A practical guide to integrating the **Dreame Aqua10 Roller** (`dreame.vacuum.r9533a`)
 into Home Assistant, plus a ready-to-use dashboard with a live map and per-room cleaning.
 
+<p align="center">
+  <img src="docs/dashboard-example.png" alt="Example dashboard" width="380">
+</p>
+
+> The image above is an illustrative mockup — generic floor plan and example room names,
+> not a real home.
+
 It covers two control paths that work well together:
 
 - **Matter** — fully local, cloud-free control (start/stop/pause/dock, clean modes, room
